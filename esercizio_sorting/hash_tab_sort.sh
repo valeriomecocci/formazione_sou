@@ -45,10 +45,7 @@ remove_duplicates_assoc() {
         # se seen[$item] è vuoto, significa che l'elemento non è stato ancora incontrato, quindi lo aggiungo al risultato
 
             seen["$item"]=1
-            #aggiungo l'elemento al risultato solo se non è già stato visto, in questo modo si evita di aggiungere duplicati
-
             result+=("$item")
-            #aggiungo l'elemento all'array result, che conterrà solo elementi unici
         fi
     done
 
