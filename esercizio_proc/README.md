@@ -1,29 +1,77 @@
-Il primo script, generatore.sh, genera un numero di processi figli deciso dall’utente, valida l’input, genera i processi in background (sleep) e poi passa il numero di processi e l’identificativo del processo padre allo script analizza_processi.sh
+# Monitoraggio processi con generatore.sh e analizza_processi.sh
 
-Il secondo script riceve i dati dal primo tramite pipe, mostra l’albero dei processi radicato nel processo padre e monitora la loro terminazione.
+Con i seguenti due script Bash, `generatore.sh` e `analizza_processi.sh`, generano processi figli in backgroud, si visualizza l'albero dei processi e si monitora la loro terminazione.
 
-generatore.sh
+## Descrizione dei due script
 
- is_numeric_value() controlla che l’input sia un numero intero positivo (non è ammesso un input vuoto e la scrittura di un numero che inizia per 0) e restituisce 0, se l'input è valido e 1, se l’input non è valido
+### `generatore.sh`
 
-input_processes() richiede il numero di processi da generare al  massimo con 3 tentativi. Richiama la funzione is_numeric_value()
+Questo script:
 
-process_generator() avvia un numero di processi in backgroud che rimangono attivi per 10 secondi in modo da permettere al ciclo di creare altri processi senza aspettare che i precedenti termini.
+- richiede all'utente il numero di processi figli da generare;
+- valida l'input come intero positivo;
+- avvia i processi in background;
+- passa il numero di processi e il PID del processo padre a `analizza_processi.sh`.
 
-check_exit_status() controlla se l’ultima funzione ha avuto successo valutando lo stato di uscita dell’ultima operazione eseguita con $? e, se questo non è 0, si stampa un messaggio di errore che viene passato alla funzione e richiamato con $1 e si interrompe lo script con exit 1
+### `analizza_processi.sh`
 
-main: vengono richiamate le funzioni, si esegue il controllo degli ’exit status e si passa il numero di processi e il PID del processo padre al secondo scipt
+Questo script:
 
+- riceve i dati da `generatore.sh` tramite pipe;
+- valida i dati in ingresso;
+- stampa l'albero dei processi radicato nel processo padre;
+- monitora la terminazione dei processi figli.
 
-analizza_processi.sh
+## Struttura degli script
 
-check_received_data() controlla che le stringhe ricevute non siano vuote e restituisce 0 o 1 in caso di successo o insuccesso, rispettivamente.
+### Funzioni in `generatore.sh`
 
-print_process_tree() stampa l’albero dei processi e con pgrep -P "$pid_parent" -f sleep si cercano solo i figli del padre e si filtra per processi sleep in modo da evitare di stampare anche il processo che corrisponde allo scipt stesso.
+- `is_numeric_value()`
+  - verifica che l'input sia un numero intero positivo;
+  - non accetta stringhe vuote;
+  - non accetta numeri che iniziano con `0`.
+  - restituisce `0` se l'input è valido, `1` in caso contrario.
 
-check_active_processes() controlla continuamente se i processi sleep sono ancora attivi, aspettando un secondo tra un controllo e l’altro per non sovraccaricare la CPU.
+- `input_processes()`
+  - richiede all'utente il numero di processi da generare;
+  - consente un massimo di 3 tentativi;
+  - richiama `is_numeric_value()` per la validazione.
 
- check_exit_status() esegue controlli sull’exit status come nello script precedente
+- `process_generator()`
+  - avvia il numero specificato di processi figli in background;
+  - ogni processo esegue `sleep 10` per restare attivo abbastanza a lungo da permettere la creazione degli altri processi.
 
-main: Riceve i dati, richiama la funzione di validazione, stampa le informazione, mostra l’albero dei processi e stampa un messaggio quando i processi sono temrinati. 
+- `check_exit_status()`
+  - controlla lo stato di uscita dell'ultima operazione eseguita usando `$?`;
+  - se lo stato non è `0`, stampa un messaggio di errore passato come parametro (`$1`) e termina lo script con `exit 1`.
+
+- `main`
+  - esegue le funzioni nell'ordine corretto;
+  - controlla gli exit status;
+  - invoca `analizza_processi.sh` passando il numero di processi e il PID del processo padre.
+
+### Funzioni in `analizza_processi.sh`
+
+- `check_received_data()`
+  - verifica che le stringhe ricevute non siano vuote;
+  - restituisce `0` se i dati sono validi, `1` in caso contrario.
+
+- `print_process_tree()`
+  - stampa l'albero dei processi radicato nel processo padre;
+  - utilizza `pgrep -P "$pid_parent" -f sleep` per recuperare solo i processi figli che eseguono `sleep`.
+  - in questo modo si evita di includere lo stesso script `analizza_processi.sh` nella lista.
+
+- `check_active_processes()`
+  - controlla ripetutamente se i processi `sleep` sono ancora attivi;
+  - attende `1` secondo tra un controllo e l'altro per non sovraccaricare la CPU.
+
+- `check_exit_status()`
+  - esegue il controllo dello stato di uscita come in `generatore.sh`.
+
+- `main`
+  - riceve i dati dalla pipe;
+  - valida i parametri;
+  - stampa le informazioni iniziali;
+  - mostra l'albero dei processi;
+  - attende la terminazione dei processi figli e stampa un messaggio di fine.
 
