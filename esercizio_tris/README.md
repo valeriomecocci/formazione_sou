@@ -36,7 +36,7 @@ Nel progetto del Tris vengono creati nove container, uno per ogni casella della 
 
 ### Regole
 
-Il _Tris_ (o _Tic-Tac-Toe_) è un gioco deterministico a informazione perfetta per due giocatori.
+Il _Tris_ (o _Tic-Tac-Toe_) è un gioco non cooperativo per due giocatori ed è _deterministico_ (un determinato insieme di strategie conduce invariabilmente a un certo esito) e ad _informazione completa_ (ogni giocatore, quando effettua ogni sua mossa, è informato di tutte le sue mosse precedenti, quelle degli altri giocatori e delle loro conseguenze).
 
 * **Obiettivo**: Il primo giocatore che riesce a disporre tre dei propri simboli in linea retta (in orizzontale, verticale o diagonale) vince la partita.
 * **Svolgimento**: I giocatori si alternano posizionando il proprio simbolo (X o O) in una delle caselle vuote della griglia 3×3.
