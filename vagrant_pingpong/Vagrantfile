@@ -1,0 +1,31 @@
+Vagrant.configure("2") do |config|
+
+  config.vm.box = "bento/ubuntu-24.04"
+
+  #nodo 1
+  config.vm.define "nodo1" do |nodo1|
+
+    nodo1.vm.hostname = "nodo1"
+
+    nodo1.vm.network "private_network",
+      ip: "192.168.56.10"
+
+    nodo1.vm.provision "shell",
+      path: "setup.sh"
+
+  end
+
+  #nodo 2
+  config.vm.define "nodo2" do |nodo2|
+
+    nodo2.vm.hostname = "nodo2"
+
+    nodo2.vm.network "private_network",
+      ip: "192.168.56.11"
+
+    nodo2.vm.provision "shell",
+      path: "setup.sh"
+
+  end
+
+end
