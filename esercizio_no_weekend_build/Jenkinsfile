@@ -1,0 +1,41 @@
+pipeline {
+
+    agent any
+
+    stages {
+
+        stage('Controllo giorno') {
+
+            steps {
+
+                script {
+
+                    //crea un oggetto Date con data e ora correnti
+                    def today = new Date()
+
+                    //ottiene il giorno della settimana in formato numerico
+                    def day = today[java.util.DAY_OF_WEEK]
+
+                    if (day >= java.util.MONDAY &&
+                        day <= java.util.FRIDAY) {
+
+                        echo "Oggi è un giorno lavorativo."
+
+                        //simulazione della build
+                        sh 'echo "Build eseguita con successo."'
+
+                    } else {
+
+                        echo "WARNING: Oggi è sabato o domenica. La build non verrà eseguita."
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    }
+
+}
