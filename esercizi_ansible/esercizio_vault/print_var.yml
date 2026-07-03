@@ -1,0 +1,11 @@
+---
+- hosts: targets
+
+  vars_files:
+    - vault.yml
+
+  tasks:
+
+    - name: Stampa le variabili del Vault
+      ansible.builtin.debug:
+        msg: "Username={{ username }},Password={{ password }}"

@@ -1,0 +1,26 @@
+---
+- name: Gestione pacchetti
+  hosts: targets
+  become: true
+
+  vars:
+    packages:
+      - name: httpd
+        state: present
+
+      - name: git
+        state: present
+
+      - name: vim
+        state: present
+
+      - name: telnet
+        state: absent
+
+  tasks:
+      - name: Installa o rimuove i pacchetti
+        ansible.builtin.dnf:
+          name: "{{ item.name }}"
+          state: "{{ item.state }}"
+        loop: "{{ packages }}"
+~                               
