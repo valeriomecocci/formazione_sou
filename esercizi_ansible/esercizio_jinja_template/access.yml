@@ -1,0 +1,25 @@
+---
+- name: Gestione whitelist utenti in access.conf
+  hosts: targets
+  become: true
+
+  vars:
+    whitelist:
+      - mario
+      - luca
+      - chiara
+
+  tasks:
+
+    - name: Genera il file dal template
+      ansible.builtin.template:
+        src: access.j2
+        dest: /tmp/access_block.txt
+      delegate_to: localhost
+
+    - name: Inserisce la whitelist prima della regola finale
+      ansible.builtin.blockinfile:
+        path: /etc/security/access.conf
+        block: "{{ lookup('ansible.builtin.file', '/tmp/access_block.txt') }}"
+        insertbefore: "^- : ALL : ALL"
+        marker: "# {mark} ANSIBLE WHITELIST"

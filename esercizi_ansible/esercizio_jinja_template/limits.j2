@@ -1,0 +1,9 @@
+{% if env_type == "prod" %}
+{{ username }} soft nofile 10000
+{{ username }} hard nofile 10000
+
+{% elif env_type == "test" or env_type == "dev" %}
+{{ username }} soft nofile 1000
+{{ username }} hard nofile 1000
+
+{% endif %}

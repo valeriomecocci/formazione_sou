@@ -1,0 +1,23 @@
+---
+- name: Configurazione limits.conf tramite template Jinja
+  hosts: targets
+  become: true
+
+  vars:
+    username: valerio
+    env_type: prod
+
+  tasks:
+
+    - name: Genera il file dal template
+      ansible.builtin.template:
+        src: limits.j2
+        dest: /tmp/limits_output.txt
+      delegate_to: localhost
+
+    - name: Inserisce il contenuto in limits.conf
+      ansible.builtin.blockinfile:
+        path: /etc/security/limits.conf
+        block: "{{ lookup('ansible.builtin.file', '/tmp/limits_output.txt') }}"
+        insertafter: EOF
+        create: yes
