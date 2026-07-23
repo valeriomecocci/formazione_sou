@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: flask-hello
+  namespace: formazione-sou
+spec:
+  selector:
+    app: flask-hello
+  ports:
+    - port: 80
+      targetPort: 5000
+  type: ClusterIP
