@@ -1,0 +1,147 @@
+---
+
+
+#PLAY 1: configurazione della vm db-source
+
+
+- name: Configura la VM db-source
+  hosts: db_source
+  become: true
+
+  vars_files:
+    - vars/vault.yml
+    - vars/all.yml
+
+  tasks:
+
+    - name: Installa MariaDB Server
+      ansible.builtin.dnf:
+        name: "{{ mariadb_package }}"
+        state: present
+
+    - name: Installa il driver Python per MariaDB
+      ansible.builtin.dnf:
+        name: "{{ python_mysql_package }}"
+        state: present
+
+    - name: Avvia ed abilita MariaDB
+      ansible.builtin.service:
+        name: mariadb
+        state: started
+        enabled: true
+
+    - name: Crea il database
+      community.mysql.mysql_db:
+        name: "{{ db_name }}"
+        state: present
+        login_unix_socket: "{{ db_socket }}"
+
+    - name: Crea la tabella employees
+      community.mysql.mysql_query:
+        login_db: "{{ db_name }}"
+        login_unix_socket: "{{ db_socket }}"
+        query: |
+          CREATE TABLE IF NOT EXISTS {{ db_table }} (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            first_name VARCHAR(50) NOT NULL,
+            last_name VARCHAR(50) NOT NULL,
+            email VARCHAR(100) NOT NULL UNIQUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+              ON UPDATE CURRENT_TIMESTAMP
+          );
+
+    - name: Inserisce i dati di test
+      community.mysql.mysql_query:
+        login_db: "{{ db_name }}"
+        login_unix_socket: "{{ db_socket }}"
+        query: |                             # | per interpretare tutto come un'unica stringa
+          INSERT IGNORE INTO {{ db_table }}
+          (first_name,last_name,email)
+          VALUES
+          ('Mario','Rossi','mario.rossi@example.com'),
+          ('Luigi','Verdi','luigi.verdi@example.com'),
+          ('Anna','Bianchi','anna.bianchi@example.com'),
+          ('Giulia','Neri','giulia.neri@example.com'),
+          ('Marco','Gialli','marco.gialli@example.com');
+
+    - name: Esegue il backup del database
+      ansible.builtin.command:
+        cmd: >
+          mysqldump
+          --socket={{ db_socket }}
+          --databases {{ db_name }}
+      register: backup_output
+
+    - name: Salva il backup su file
+      ansible.builtin.copy:
+        content: "{{ backup_output.stdout }}"
+        dest: "{{ backup_file }}"
+        owner: vagrant
+        group: vagrant
+        mode: "0644"
+
+    - name: Scarica il backup sul controller Ansible
+      ansible.builtin.fetch:
+        src: "{{ backup_file }}"
+        dest: /tmp/
+        flat: true
+
+
+
+
+# PLAY 2: Configurazione della vm db-destination
+
+
+- name: Configura la VM db-destination
+  hosts: db_destination
+  become: true
+
+  vars_files:
+    - vars/vault.yml
+    - vars/all.yml
+
+  tasks:
+
+    - name: Installa MariaDB Server
+      ansible.builtin.dnf:
+        name: "{{ mariadb_package }}"
+        state: present
+
+    - name: Installa il driver Python per MariaDB
+      ansible.builtin.dnf:
+        name: "{{ python_mysql_package }}"
+        state: present
+
+    - name: Avvia ed abilita MariaDB
+      ansible.builtin.service:
+        name: mariadb
+        state: started
+        enabled: true
+
+    - name: Copia il backup sulla VM di destinazione
+      ansible.builtin.copy:
+        src: /tmp/backup.sql
+        dest: "{{ backup_file }}"
+        owner: vagrant
+        group: vagrant
+        mode: "0644"
+
+    - name: Ripristina il database
+      ansible.builtin.shell: |
+        mariadb --socket={{ db_socket }} < {{ backup_file }}
+      args:
+        executable: /bin/bash
+
+    - name: Conta i record della tabella employees
+      community.mysql.mysql_query:
+        login_db: "{{ db_name }}"
+        login_unix_socket: "{{ db_socket }}"
+        query: |
+          SELECT COUNT(*) AS totale
+          FROM {{ db_table }};
+      register: verifica
+
+    - name: Mostra il numero di record ripristinati
+      ansible.builtin.debug:
+        var: verifica.query_result

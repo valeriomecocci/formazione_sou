@@ -1,0 +1,18 @@
+---
+#pacchetti
+
+mariadb_package: mariadb-server
+python_mysql_package: python3-PyMySQL
+
+#database
+
+db_name: company
+db_table: employees
+
+#socket MariaDB
+
+db_socket: /var/lib/mysql/mysql.sock
+
+#backup
+
+backup_file: /home/ansible/backup.sql
