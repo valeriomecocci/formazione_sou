@@ -36,5 +36,4 @@
         shell: "{{ item.shell }}"
         create_home: true
         state: present
-      loop: "{{ users }}"
-~                         
+      loop: "{{ users }}"                         
