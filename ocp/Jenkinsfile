@@ -1,0 +1,45 @@
+pipeline {
+    agent any
+
+    environment {
+        chartName   = 'flaskapp-chart'
+        nameSpace1  = 'first-layer'
+        nameSpace2  = 'second-layer'
+        serviceName = 'flaskapp'
+        repoName    = 'flask-app-openshift-v1'
+        repoUrl     = 'https://danielebottino.github.io/helm_deployment/'
+        kubeConfig  = '/var/jenkins_home/.kube/config'
+        // --- adattamenti per il nostro Mac (Intel/amd64) ---
+        imageRepo   = 'valeriomecocci/flask-app'
+        imageTag    = 'latest'
+        appPort     = '5000'
+    }
+
+    stages {
+        stage('Add Helm Repo') {
+            steps {
+                sh 'sudo helm repo add ${repoName} ${repoUrl} --force-update'
+                sh 'sudo helm repo update'
+            }
+        }
+        stage('Upgrade previous deployment over first namespace') {
+            steps {
+                sh '''sudo helm upgrade --install ${serviceName} ${repoName}/${chartName} \
+                      --kubeconfig ${kubeConfig} -n ${nameSpace1} \
+                      --set image.repository=${imageRepo} --set image.tag=${imageTag} \
+                      --set service.port=${appPort} \
+                      --wait --rollback-on-failure'''
+            }
+        }
+        stage('Upgrade previous deployment over second namespace') {
+            steps {
+                sh '''sudo helm upgrade --install ${serviceName} ${repoName}/${chartName} \
+                      --kubeconfig ${kubeConfig} -n ${nameSpace2} \
+                      --set image.repository=${imageRepo} --set image.tag=${imageTag} \
+                      --set service.port=${appPort} \
+                      --wait --rollback-on-failure'''
+            }
+        }
+    }
+}
+
